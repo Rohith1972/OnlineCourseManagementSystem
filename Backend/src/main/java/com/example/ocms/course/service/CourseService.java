@@ -146,6 +146,7 @@ public class CourseService {
         course.setCategory(request.getCategory().trim());
 
         Course updatedCourse = courseRepository.save(course);
+        eventPublisher.publishEvent(new com.example.ocms.course.event.CourseUpdatedEvent(updatedCourse));
         return CourseResponse.fromEntity(updatedCourse);
     }
 
@@ -160,6 +161,9 @@ public class CourseService {
 
         course.setPublished(newStatus);
         Course updatedCourse = courseRepository.save(course);
+        if (updatedCourse.isPublished()) {
+            eventPublisher.publishEvent(new com.example.ocms.course.event.CoursePublishedEvent(updatedCourse));
+        }
         return CourseResponse.fromEntity(updatedCourse);
     }
 

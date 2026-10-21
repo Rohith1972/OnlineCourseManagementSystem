@@ -1,0 +1,380 @@
+{
+  "info": {
+    "name": "Online Course Management System (OCMS) API",
+    "description": "Complete Postman collection for testing all OCMS endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Rohith Student\",\n  \"email\": \"student@example.com\",\n  \"password\": \"Password@123\",\n  \"phoneNumber\": \"+919876543210\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register/student", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register", "student"] }
+          }
+        },
+        {
+          "name": "Register Instructor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dr. Alan Turing\",\n  \"email\": \"instructor@example.com\",\n  \"password\": \"Password@123\",\n  \"phoneNumber\": \"+919876543211\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register/instructor", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register", "instructor"] }
+          }
+        },
+        {
+          "name": "Login (Student / Instructor / Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ocms.com\",\n  \"password\": \"Admin@123456\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. User Profiles & Admin",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "profile"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Rohith Kumar Updated\",\n  \"phoneNumber\": \"+919999888877\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/users/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "profile"] }
+          }
+        },
+        {
+          "name": "Get All Users (Admin Only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?role=STUDENT&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"],
+              "query": [
+                { "key": "role", "value": "STUDENT" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By ID (Admin or Self)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Course Management",
+      "item": [
+        {
+          "name": "Create Course (Instructor/Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Mastering Spring Boot 3 & Java 21\",\n  \"description\": \"Comprehensive course on Spring Boot 3, REST APIs, Security, and JPA.\",\n  \"category\": \"Computer Science\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/courses", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses"] }
+          }
+        },
+        {
+          "name": "Browse Courses (Public / Filter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/courses?category=Computer Science&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "courses"],
+              "query": [
+                { "key": "category", "value": "Computer Science" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Course By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1"] }
+          }
+        },
+        {
+          "name": "Update Course (Instructor Owner/Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Mastering Spring Boot 3 & Java 21 - Edition 2026\",\n  \"description\": \"Updated syllabus with modern microservices architecture.\",\n  \"category\": \"Computer Science\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1"] }
+          }
+        },
+        {
+          "name": "Publish/Unpublish Course",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"published\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1/publish", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1", "publish"] }
+          }
+        },
+        {
+          "name": "Delete Course",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Course Learning Content",
+      "item": [
+        {
+          "name": "Add Content to Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"01. Introduction to Spring Boot 3\",\n  \"contentType\": \"VIDEO\",\n  \"resourceUrl\": \"https://example.com/videos/intro.mp4\",\n  \"position\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1/content", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1", "content"] }
+          }
+        },
+        {
+          "name": "Get Course Content (Enrolled/Owner)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1/content", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1", "content"] }
+          }
+        },
+        {
+          "name": "Update Content",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"01. Introduction to Spring Boot 3 (HD Quality)\",\n  \"contentType\": \"VIDEO\",\n  \"resourceUrl\": \"https://example.com/videos/intro-hd.mp4\",\n  \"position\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/content/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content", "1"] }
+          }
+        },
+        {
+          "name": "Delete Content",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/content/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Enrollment & Progress",
+      "item": [
+        {
+          "name": "Enroll in Course (Student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1/enroll", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1", "enroll"] }
+          }
+        },
+        {
+          "name": "Get My Ongoing Enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/enrollments/my?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["api", "v1", "enrollments", "my"] }
+          }
+        },
+        {
+          "name": "Get My Enrollment History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/enrollments/my/history?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["api", "v1", "enrollments", "my", "history"] }
+          }
+        },
+        {
+          "name": "Get Course Enrolled Students (Instructor/Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1/students?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1", "students"] }
+          }
+        },
+        {
+          "name": "Mark Content Progress (Student)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/courses/1/content/1/progress", "host": ["{{baseUrl}}"], "path": ["api", "v1", "courses", "1", "content", "1", "progress"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications/my?page=0&size=10", "host": ["{{baseUrl}}"], "path": ["api", "v1", "notifications", "my"] }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications/1/read", "host": ["{{baseUrl}}"], "path": ["api", "v1", "notifications", "1", "read"] }
+          }
+        }
+      ]
+    }
+  ]
+}

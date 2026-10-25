@@ -21,50 +21,20 @@ A production-ready, clean, and beginner-friendly RESTful backend API for an **On
 
 ## 2. Layered Package Architecture
 
-The project strictly follows a clean, feature-driven layered architecture:
+The project strictly follows a clean, industry-standard layered architecture (`controller`, `service`, `repository`, `entity`, `dto`, `config`, `security`, `exception`, `event`):
 
 ```text
 com.example.ocms
 ├── OcmsApplication.java           # Spring Boot application entry point
-├── config                         # Configuration (OpenAPI, DataInitializer)
-├── security                       # JWT utils, filters, user details, SecurityConfig
-├── exception                      # Global exception handler, error responses
-├── auth                           # Authentication (Student/Instructor registration, login)
-│   ├── controller
-│   ├── dto
-│   └── service
-├── user                           # User entity, profile viewing and editing, admin user management
-│   ├── controller
-│   ├── dto
-│   ├── entity
-│   ├── repository
-│   └── service
-├── course                         # Course entity, CRUD, ownership, publishing, filtering
-│   ├── controller
-│   ├── dto
-│   ├── entity
-│   ├── event
-│   ├── repository
-│   └── service
-├── content                        # Course learning materials (Video, PDF, Quiz metadata)
-│   ├── controller
-│   ├── dto
-│   ├── entity
-│   ├── repository
-│   └── service
-├── enrollment                     # Enrollment, ContentProgress, completion tracking
-│   ├── controller
-│   ├── dto
-│   ├── entity
-│   ├── event
-│   ├── repository
-│   └── service
-└── notification                   # In-app notifications & decoupled event triggers
-    ├── controller
-    ├── dto
-    ├── entity
-    ├── repository
-    └── service
+├── config                         # Global configurations (OpenAPI, DataInitializer)
+├── controller                     # REST API Controllers (Auth, Course, Content, Enrollment, Notification, User)
+├── dto                            # Data Transfer Objects (Requests and Responses)
+├── entity                         # JPA Entities and Enums (User, Role, Course, CourseContent, Enrollment, etc.)
+├── event                          # Decoupled domain application events (CoursePublishedEvent, StudentEnrolledEvent)
+├── exception                      # Global exception handler & custom exceptions
+├── repository                     # Spring Data JPA Repositories
+├── security                       # Spring Security 6 config, JWT filters, CustomUserDetailsService, UserPrincipal
+└── service                        # Business logic services (Auth, Course, Content, Enrollment, Notification, User)
 ```
 
 ---

@@ -1,7 +1,7 @@
 package com.example.ocms.security;
 
-import com.example.ocms.user.entity.Role;
-import com.example.ocms.user.entity.User;
+import com.example.ocms.entity.Role;
+import com.example.ocms.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

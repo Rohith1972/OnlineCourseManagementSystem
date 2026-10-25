@@ -1,7 +1,7 @@
 package com.example.ocms.security;
 
-import com.example.ocms.user.entity.User;
-import com.example.ocms.user.repository.UserRepository;
+import com.example.ocms.entity.User;
+import com.example.ocms.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

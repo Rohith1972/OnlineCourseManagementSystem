@@ -1,10 +1,10 @@
 package com.example.ocms.security;
 
-import com.example.ocms.auth.dto.LoginRequest;
-import com.example.ocms.auth.dto.StudentRegisterRequest;
-import com.example.ocms.user.entity.Role;
-import com.example.ocms.user.entity.User;
-import com.example.ocms.user.repository.UserRepository;
+import com.example.ocms.dto.LoginRequest;
+import com.example.ocms.dto.StudentRegisterRequest;
+import com.example.ocms.entity.Role;
+import com.example.ocms.entity.User;
+import com.example.ocms.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

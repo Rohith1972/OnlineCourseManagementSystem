@@ -116,6 +116,25 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
+    public Page<CourseResponse> getPublishedCoursesByInstructor(Long instructorId, String category, Pageable pageable) {
+        User instructor = userRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + instructorId));
+
+        if (!instructor.getRole().equals(Role.INSTRUCTOR)) {
+            throw new BadRequestException("User with id " + instructorId + " is not an instructor");
+        }
+
+        if (category != null && !category.isBlank()) {
+            return courseRepository.findByInstructorIdAndPublishedTrueAndCategoryIgnoreCase(instructorId, category.trim(), pageable)
+                    .map(CourseResponse::fromEntity);
+        }
+
+        return courseRepository.findByInstructorIdAndPublishedTrue(instructorId, pageable)
+                .map(CourseResponse::fromEntity);
+    }
+
+
+    @Transactional(readOnly = true)
     public CourseResponse getCourseById(Long courseId, UserPrincipal currentUser) {
         Course course = findCourseOrThrow(courseId);
 

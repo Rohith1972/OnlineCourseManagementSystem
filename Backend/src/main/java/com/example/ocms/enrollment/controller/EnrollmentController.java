@@ -70,6 +70,20 @@ public class EnrollmentController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/instructors/{instructorId}/courses/{courseId}/students")
+    @PreAuthorize("hasAnyRole('INSTRUCTOR', 'ADMIN')")
+    @Operation(summary = "Get enrolled students for a specific course by a specific instructor")
+    public ResponseEntity<Page<EnrollmentResponse>> getCourseEnrolledStudentsForInstructor(
+            @PathVariable Long instructorId,
+            @PathVariable Long courseId,
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        Page<EnrollmentResponse> response = enrollmentService.getCourseEnrolledStudentsForInstructor(
+                instructorId, courseId, pageable, currentUser);
+        return ResponseEntity.ok(response);
+    }
+
+
     @PatchMapping("/courses/{courseId}/content/{contentId}/progress")
     @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN')")
     @Operation(summary = "Mark a learning item completed or incomplete and recalculate progress")

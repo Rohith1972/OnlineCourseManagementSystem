@@ -16,10 +16,16 @@ import com.example.ocms.enrollment.repository.ContentProgressRepository;
 import com.example.ocms.enrollment.repository.EnrollmentRepository;
 import com.example.ocms.exception.BadRequestException;
 import com.example.ocms.exception.DuplicateResourceException;
+import com.example.ocms.exception.ResourceNotFoundException;
 import com.example.ocms.security.UserPrincipal;
 import com.example.ocms.user.entity.Role;
 import com.example.ocms.user.entity.User;
 import com.example.ocms.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -147,4 +153,64 @@ class EnrollmentServiceTest {
         assertNotNull(enrollment.getCompletionDate());
         verify(enrollmentRepository, times(1)).save(enrollment);
     }
+
+    @Test
+    @DisplayName("Should successfully get enrolled students for a specific course by specific instructor")
+    void shouldGetCourseEnrolledStudentsForInstructorSuccessfully() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Enrollment> enrollmentPage = new PageImpl<>(List.of(enrollment), pageable, 1);
+        UserPrincipal instructorPrincipal = UserPrincipal.create(instructor);
+
+        when(userRepository.findById(20L)).thenReturn(Optional.of(instructor));
+        when(courseService.findCourseOrThrow(100L)).thenReturn(course);
+        when(enrollmentRepository.findByCourseId(100L, pageable)).thenReturn(enrollmentPage);
+
+        Page<EnrollmentResponse> result = enrollmentService.getCourseEnrolledStudentsForInstructor(
+                20L, 100L, pageable, instructorPrincipal);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Student Bob", result.getContent().get(0).getStudent().getFullName());
+        verify(courseService, times(1)).assertCanManageCourse(course, instructorPrincipal);
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when instructor not found")
+    void shouldThrowWhenInstructorNotFound() {
+        Pageable pageable = PageRequest.of(0, 10);
+        UserPrincipal instructorPrincipal = UserPrincipal.create(instructor);
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                enrollmentService.getCourseEnrolledStudentsForInstructor(999L, 100L, pageable, instructorPrincipal));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException when user is not an instructor")
+    void shouldThrowWhenUserIsNotInstructor() {
+        Pageable pageable = PageRequest.of(0, 10);
+        UserPrincipal instructorPrincipal = UserPrincipal.create(instructor);
+        when(userRepository.findById(10L)).thenReturn(Optional.of(student));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                enrollmentService.getCourseEnrolledStudentsForInstructor(10L, 100L, pageable, instructorPrincipal));
+        assertTrue(ex.getMessage().contains("is not an instructor"));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException when course does not belong to instructor")
+    void shouldThrowWhenCourseDoesNotBelongToInstructor() {
+        Pageable pageable = PageRequest.of(0, 10);
+        User otherInstructor = new User("Other Instructor", "other@example.com", "pass", "789", Role.INSTRUCTOR);
+        otherInstructor.setId(30L);
+        UserPrincipal otherPrincipal = UserPrincipal.create(otherInstructor);
+
+        when(userRepository.findById(30L)).thenReturn(Optional.of(otherInstructor));
+        when(courseService.findCourseOrThrow(100L)).thenReturn(course); // course has instructor id 20L
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                enrollmentService.getCourseEnrolledStudentsForInstructor(30L, 100L, pageable, otherPrincipal));
+        assertTrue(ex.getMessage().contains("does not belong to instructor"));
+    }
 }
+

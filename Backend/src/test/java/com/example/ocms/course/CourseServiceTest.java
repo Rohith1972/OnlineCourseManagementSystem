@@ -9,10 +9,16 @@ import com.example.ocms.course.service.CourseService;
 import com.example.ocms.enrollment.repository.EnrollmentRepository;
 import com.example.ocms.exception.BadRequestException;
 import com.example.ocms.exception.ForbiddenException;
+import com.example.ocms.exception.ResourceNotFoundException;
 import com.example.ocms.security.UserPrincipal;
 import com.example.ocms.user.entity.Role;
 import com.example.ocms.user.entity.User;
 import com.example.ocms.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -145,4 +151,64 @@ class CourseServiceTest {
         assertDoesNotThrow(() -> courseService.deleteCourse(100L, instructorPrincipal));
         verify(courseRepository, times(1)).delete(testCourse);
     }
+
+    @Test
+    @DisplayName("Should successfully retrieve published courses by instructor")
+    void shouldGetPublishedCoursesByInstructorSuccessfully() {
+        Pageable pageable = PageRequest.of(0, 10);
+        testCourse.setPublished(true);
+        Page<Course> coursePage = new PageImpl<>(List.of(testCourse), pageable, 1);
+
+        when(userRepository.findById(10L)).thenReturn(Optional.of(instructor));
+        when(courseRepository.findByInstructorIdAndPublishedTrue(10L, pageable)).thenReturn(coursePage);
+
+        Page<CourseResponse> result = courseService.getPublishedCoursesByInstructor(10L, null, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Java Masterclass", result.getContent().get(0).getTitle());
+        assertTrue(result.getContent().get(0).isPublished());
+    }
+
+    @Test
+    @DisplayName("Should retrieve published courses by instructor with category filter")
+    void shouldGetPublishedCoursesByInstructorWithCategory() {
+        Pageable pageable = PageRequest.of(0, 10);
+        testCourse.setPublished(true);
+        Page<Course> coursePage = new PageImpl<>(List.of(testCourse), pageable, 1);
+
+        when(userRepository.findById(10L)).thenReturn(Optional.of(instructor));
+        when(courseRepository.findByInstructorIdAndPublishedTrueAndCategoryIgnoreCase(10L, "Programming", pageable))
+                .thenReturn(coursePage);
+
+        Page<CourseResponse> result = courseService.getPublishedCoursesByInstructor(10L, "Programming", pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Programming", result.getContent().get(0).getCategory());
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when instructor not found for published courses")
+    void shouldThrowWhenInstructorNotFoundForPublishedCourses() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () ->
+                courseService.getPublishedCoursesByInstructor(999L, null, pageable));
+    }
+
+    @Test
+    @DisplayName("Should throw BadRequestException when user is not an instructor for published courses")
+    void shouldThrowWhenUserIsNotInstructorForPublishedCourses() {
+        Pageable pageable = PageRequest.of(0, 10);
+        User student = new User("Student", "student@example.com", "pass", "123", Role.STUDENT);
+        student.setId(50L);
+        when(userRepository.findById(50L)).thenReturn(Optional.of(student));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+                courseService.getPublishedCoursesByInstructor(50L, null, pageable));
+        assertTrue(ex.getMessage().contains("is not an instructor"));
+    }
 }
+

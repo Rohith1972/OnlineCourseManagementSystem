@@ -100,15 +100,32 @@ public class EnrollmentService {
         Course course = courseService.findCourseOrThrow(courseId);
         courseService.assertCanManageCourse(course, currentUser);
 
-        List<Enrollment> enrollments = enrollmentRepository.findByCourseId(courseId);
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), enrollments.size());
-        List<EnrollmentResponse> pageContent = (start <= end)
-                ? enrollments.subList(start, end).stream().map(EnrollmentResponse::fromEntity).collect(Collectors.toList())
-                : List.of();
-
-        return new PageImpl<>(pageContent, pageable, enrollments.size());
+        return enrollmentRepository.findByCourseId(courseId, pageable)
+                .map(EnrollmentResponse::fromEntity);
     }
+
+    @Transactional(readOnly = true)
+    public Page<EnrollmentResponse> getCourseEnrolledStudentsForInstructor(
+            Long instructorId, Long courseId, Pageable pageable, UserPrincipal currentUser) {
+        User instructor = userRepository.findById(instructorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Instructor not found with id: " + instructorId));
+
+        if (!instructor.getRole().equals(Role.INSTRUCTOR)) {
+            throw new BadRequestException("User with id " + instructorId + " is not an instructor");
+        }
+
+        Course course = courseService.findCourseOrThrow(courseId);
+
+        if (!course.getInstructor().getId().equals(instructorId)) {
+            throw new BadRequestException("Course with id " + courseId + " does not belong to instructor with id " + instructorId);
+        }
+
+        courseService.assertCanManageCourse(course, currentUser);
+
+        return enrollmentRepository.findByCourseId(courseId, pageable)
+                .map(EnrollmentResponse::fromEntity);
+    }
+
 
     @Transactional
     public ContentProgressResponse updateProgress(Long courseId, Long contentId, Boolean completed, UserPrincipal currentUser) {

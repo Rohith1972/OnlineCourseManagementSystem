@@ -279,20 +279,31 @@ On initial startup, `DataInitializer` automatically ensures a default administra
 - **Response:** `201 Created`
 
 #### 2. Browse Courses
-- **Endpoint:** `GET /api/v1/courses?category=Computer Science&page=0&size=10`
+- **Endpoint:** `GET /api/v1/courses?category=Computer Science&instructorId=2&page=0&size=10`
 - **Auth:** Public / Optional Token
 - **Rules:**
   - Unauthenticated visitors and Students receive **only published courses**.
   - Instructors can view published courses or their own courses.
   - Administrators can view all courses across the platform.
+  - Optional `instructorId` parameter filters published courses by a specific instructor.
 - **Response:** `200 OK` (Paginated list of courses)
 
-#### 3. Get Course Details
+#### 3. Get All Published Courses by an Instructor
+- **Endpoint:** `GET /api/v1/instructors/{instructorId}/courses?category=Computer Science&page=0&size=10`
+- **Alternative:** `GET /api/v1/courses/instructor/{instructorId}?page=0&size=10`
+- **Auth:** Public
+- **Rules:**
+  - Validates that `instructorId` exists and has `INSTRUCTOR` role.
+  - Returns only published courses created by that instructor.
+  - Supports optional `category` filter and pagination.
+- **Response:** `200 OK` (Paginated list of published courses)
+
+#### 4. Get Course Details
 - **Endpoint:** `GET /api/v1/courses/{courseId}`
 - **Auth:** Public for published courses; Owner Instructor / Admin for unpublished courses
 - **Response:** `200 OK`
 
-#### 4. Update Course Details
+#### 5. Update Course Details
 - **Endpoint:** `PUT /api/v1/courses/{courseId}`
 - **Auth:** Bearer Token (`Course Instructor Owner` or `ADMIN`)
 - **Request Body:**
@@ -305,7 +316,7 @@ On initial startup, `DataInitializer` automatically ensures a default administra
 ```
 - **Response:** `200 OK`
 
-#### 5. Publish or Unpublish Course
+#### 6. Publish or Unpublish Course
 - **Endpoint:** `PATCH /api/v1/courses/{courseId}/publish`
 - **Auth:** Bearer Token (`Course Instructor Owner` or `ADMIN`)
 - **Request Body (Optional):**
@@ -316,7 +327,7 @@ On initial startup, `DataInitializer` automatically ensures a default administra
 ```
 - **Response:** `200 OK` *(Triggers an in-app notification to all enrolled students)*
 
-#### 6. Delete Course
+#### 7. Delete Course
 - **Endpoint:** `DELETE /api/v1/courses/{courseId}`
 - **Auth:** Bearer Token (`Course Instructor Owner` or `ADMIN`)
 - **Rules:** Enforces safe deletion. If student enrollment history exists, returns `400 Bad Request`.
@@ -411,7 +422,16 @@ On initial startup, `DataInitializer` automatically ensures a default administra
 - **Auth:** Bearer Token (`Course Instructor Owner` or `ADMIN`)
 - **Response:** `200 OK` (Paginated list of enrolled students)
 
-#### 5. Mark Learning Item Completed / Incomplete
+#### 5. Get Enrolled Students for a Specific Course by a Specific Instructor
+- **Endpoint:** `GET /api/v1/instructors/{instructorId}/courses/{courseId}/students?page=0&size=10`
+- **Auth:** Bearer Token (`Specific Course Instructor` or `ADMIN`)
+- **Rules:**
+  - Validates that `instructorId` exists and has `INSTRUCTOR` role.
+  - Validates that `courseId` belongs to the specified instructor.
+  - Returns paginated list of registered students along with `totalElements` (total registered students).
+- **Response:** `200 OK` (Paginated list of enrolled students)
+
+#### 6. Mark Learning Item Completed / Incomplete
 - **Endpoint:** `PATCH /api/v1/courses/{courseId}/content/{contentId}/progress`
 - **Auth:** Bearer Token (`STUDENT`, `ADMIN`)
 - **Request Body (Optional):**

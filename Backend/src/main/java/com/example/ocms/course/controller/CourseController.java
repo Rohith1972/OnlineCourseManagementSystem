@@ -42,15 +42,31 @@ public class CourseController {
     }
 
     @GetMapping
-    @Operation(summary = "Browse courses with optional category filter and pagination")
+    @Operation(summary = "Browse courses with optional category, instructor filter and pagination")
     public ResponseEntity<Page<CourseResponse>> getCourses(
+            @RequestParam(required = false) Long instructorId,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Boolean publishedOnly,
             @PageableDefault(size = 10) Pageable pageable,
             @AuthenticationPrincipal UserPrincipal currentUser) {
+        if (instructorId != null) {
+            Page<CourseResponse> response = courseService.getPublishedCoursesByInstructor(instructorId, category, pageable);
+            return ResponseEntity.ok(response);
+        }
         Page<CourseResponse> response = courseService.getCourses(category, publishedOnly, pageable, currentUser);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping({"/instructor/{instructorId}", "/instructor/{instructorId}/published"})
+    @Operation(summary = "Get all courses published by a specific instructor")
+    public ResponseEntity<Page<CourseResponse>> getPublishedCoursesByInstructor(
+            @PathVariable Long instructorId,
+            @RequestParam(required = false) String category,
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<CourseResponse> response = courseService.getPublishedCoursesByInstructor(instructorId, category, pageable);
+        return ResponseEntity.ok(response);
+    }
+
 
     @GetMapping("/{courseId}")
     @Operation(summary = "Get course details by ID (Public for published; Instructor/Admin for unpublished)")

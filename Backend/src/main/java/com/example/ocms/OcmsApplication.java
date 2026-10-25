@@ -9,6 +9,8 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport;
 public class OcmsApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(OcmsApplication.class, args);
+
     }
 }
